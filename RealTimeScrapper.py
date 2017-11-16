@@ -21,9 +21,6 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
 
 class TBaiDuNewsScapper:
-    # 这里要注意一个python不同于C++ 的类定义的问题
-    # 如果该类不同实例间要共享一个变量. 如果要避免变量共享的情况，则这些变量要定义砸__init__函数中
-    # ------------------------- 实例间共享变量定义(一个实例中改变，其它实例中也会改变----------------------------------#
     __Author__ = 'FlameMan'
     Master = {'Master':{'UserName':'', 'NickName':'FlameMan'}}
     initNewsinList = 100
@@ -79,19 +76,12 @@ class TBaiDuNewsScapper:
                     self.subkeywordList.setdefault(key, set())
             if 'serachRangeOpts' in data:
                 self.serachRangeOpts = data['serachRangeOpts']
-#                for key in self.serachRangeOpts:
-#                    if key == '如意集团':
-#                        self.serachRangeOpts[key]['百度网页'] = True   
-#                    else:
-#                        self.serachRangeOpts[key]['搜狗微信'] = False
             else:
                 self.serachRangeOpts = {}
                 for key in self.keywordList:
                     self.serachRangeOpts[key] = {'百度新闻':True, '百度网页':False,'搜狗新闻':True,'搜狗微信':False,'今日头条':True }
             print(self.serachRangeOpts)
             self.companyInFiled = data['companyInFiled']
-#            if self.mainUser == 'XuKailong':
-#                self.companyInFiled = ['如意集团']
             self.numOfNewsInEachScan = data['numOfNewsInEachScan']
             self.numOfNewsInFieldComp = data['numOfNewsInFieldComp']
             self.defaultSortMethod = data['defaultSortMethod']
@@ -115,7 +105,6 @@ class TBaiDuNewsScapper:
             # log file   
             try:
                 WeChat.InitWeChatUsers(self.UserList, self.logfile) #初始化用户账号
-#                WeChat.SendWeChatMsgToUserList(self.UserList, self.initMsg, self.logfile) # 向所有用户通知上线信息
             except Exception as e:   #异常，向上抛出。如果第一次初始化，属于严重异常，创建列表中初始化，属于一般异常
                 errmsg = '新闻监控类用户列表初始化异常: ' + str(e) + '。已通知管理员处理！'
                 self.write2Log(errmsg)
@@ -127,9 +116,7 @@ class TBaiDuNewsScapper:
             self.keywordList = ['一带一路'] # 每次更新keyswords时，需要同步更新residDays
             self.subkeywordList = {self.keywordList[0]:set(['丝绸之路'])} # 副标签的作用是，每个关键词可以依次循环搜索副关键词，并查询其新闻内容；每个新闻中，应该在标题或者摘要中包含至少一个主关键词或者副关键词，否则认为是垃圾信息
             self.serachRangeOpts = {self.keywordList[0]:{'百度新闻':True, '百度网页':False,'搜狗新闻':False,'搜狗微信':False,'今日头条':False }}
-            self.companyInFiled = ['魏桥纺织','江苏阳光','九牧王','海澜之家','红豆股份',\
-                                   '雅戈尔', '希努尔',  '柏堡龙','朗姿股份', '上海三毛',\
-                                   '搜于特', '三房巷', '太平鸟', '报喜鸟', '维格娜丝','杉杉股份','如意集团']
+            self.companyInFiled = ['一带一路']
             self.numOfNewsInEachScan = 60
             self.numOfNewsInFieldComp = 60
             self.defaultSortMethod = 'date'
@@ -149,7 +136,6 @@ class TBaiDuNewsScapper:
             try:
                 self.UserList.setdefault(callName,{'UserName':'', 'NickName':nickName})  # 将主账户加入UserList
                 WeChat.InitWeChatUsers(self.UserList, self.logfile) #初始化用户账号
-#                WeChat.SendWeChatMsgToUserList(self.UserList, self.initMsg, self.logfile) # 向所有用户通知上线信息
             except Exception as e:   #异常，向上抛出。如果第一次初始化，属于严重异常，创建列表中初始化，属于一般异常
                 errmsg = '新闻监控类用户列表初始化异常: ' + str(e) + '。已通知管理员处理！'
                 self.write2Log(errmsg)
@@ -276,19 +262,6 @@ class TBaiDuNewsScapper:
     def getMainUser(self):
         return self.mainUser 
     def addNews2List(self, keyword, news):
-        # 仅能在发送提醒消息后调用该函数
-        # 将news 添加到list中，并排序
-        # news类型是List中排序的类型，典型的news结构如下，即是个键值对
-        """
- ('news_55',
- {'author': '金融界',
-  'date': '2017年04月27日 18:23',
-  'link': 'http://stock.jrj.com.cn/share,disc,2017-04-28,002193,0000000000000hz4ce.shtml',
-  'source': '金融界\xa0\xa02017年04月27日 18:23',
-  'summary': '证券代码:002193 证券简称:山东如意 公告编号:2017-028。 山东济宁如意毛纺织股份有限公司。 股票交易异常波动公告。 本公司及董事会全体成员保证公  百度快照',
-  'timeflag': True,
-  'title': '山东如意:股票交易异常波动公告'})
-        """
         try:
             Output = ''
             if keyword in self.keywordList:
@@ -301,8 +274,6 @@ class TBaiDuNewsScapper:
                     self.NewsList[keyword].insert(0, news) # 在最开始加入，默认为新来的总是最新发生的时间
                 # 如果NewsList中尚未达到上限，直接加入，否则移除最后一条，并添加新的一条
                 # 重新排序
- #               temp = sorted(dict(self.NewsList[keyword]).items(),key = lambda d:d[1]['date'], reverse = True)
- #               self.NewsList[keyword] = temp
                 Output  = '## 更新关键词 【：' + keyword + ' 】 新闻列表成功！\n'
                 self.writeNews2File(self.NewsList[keyword], WeChat.news_dir + keyword + self.newsFileTail, '## 更新关键词 【：' + keyword + ' 】 新闻列表， 最近 ' + str(len(self.NewsList[keyword])) + ' 条新闻搜索结果如下（时间排序）：\n\n','a+')
             else: # 一般错误
@@ -543,7 +514,6 @@ class TBaiDuNewsScapper:
                     if Flag:
                         news_assemble.update([Output_sum[news]['title'] + Output_sum[news]['author']])
                         new_output.setdefault(news, Output_sum[news])
-#            print(self.label + '抓取关键词 【' + str(keywords) + '】新闻成功！' )
         else:
             print(self.label + '抓取关键词 【' + str(keywords) + '】新闻失败！' )
             new_output  = {}
@@ -1219,7 +1189,7 @@ class TBaiDuNewsScapper:
         return Output
     
     def addUser2UserList(self, paras, user):
-#    \'新闻 au ShiRui XuKailong FlameMan\'： \t 在ShiRui主账号下，添加子账号,callName为XuKailong，昵称为FlameMan。子账户不能超过上限 5 个\n 
+#    \'新闻 au aa bb FlameMan\'： \t 在ShiRui主账号下，添加子账号,callName为XuKailong，昵称为FlameMan。子账户不能超过上限 5 个\n 
 #    paras 中从au开始 
 #    user为字符串
         if len(paras) !=4:
